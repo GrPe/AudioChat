@@ -12,8 +12,6 @@ namespace EnvyAudioChat
     public class AudioSocket : IDisposable
     {
         private Socket socket;
-        private CancellationTokenSource tokenSource;
-        private CancellationToken token;
         private WaveInEvent waveIn;
         private WaveOutEvent waveOut;
 
@@ -22,28 +20,20 @@ namespace EnvyAudioChat
 
         public AudioSocket(Socket socket)
         {
-            tokenSource = null;
             this.socket = socket;
         }
 
         public void Start()
         {
-            if(tokenSource != null)
-                tokenSource.Dispose();
-
-            tokenSource = new CancellationTokenSource();
-            token = tokenSource.Token;
-
             waveIn = new WaveInEvent();
             waveOut = new WaveOutEvent();
 
-            Task.Run(() => Listen(), token);
-            Task.Run(() => Send(), token);
+            Task.Run(() => Listen());
+            Task.Run(() => Send());
         }
 
         public void Stop()
         {
-            tokenSource.Cancel();
             socket.Close();
             waveIn.StopRecording();
         }
@@ -86,8 +76,6 @@ namespace EnvyAudioChat
         public void Dispose()
         {
             Stop();
-
-            tokenSource?.Dispose();
             socket?.Dispose();
         }
     }
